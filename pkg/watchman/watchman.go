@@ -32,16 +32,16 @@ func (w *Watchman) Serve() {
 			log.Println("Hard Exit")
 			os.Exit(2)
 	}()
-	if err := run(&ctx, watchTicker); err != nil {
+	if err := run(ctx, watchTicker); err != nil {
 		log.Fatalln(err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx *context.Context, ticker *time.Ticker) error {
+func run(ctx context.Context, ticker *time.Ticker) error {
 	for {
 		select {
-		case <-(*ctx).Done():
+		case <-ctx.Done():
 			time.Sleep(5 * time.Second)
 			log.Println("Terminating")
 			return nil
