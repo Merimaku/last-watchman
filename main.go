@@ -1,10 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"github.com/Merimaku/last-watchman/pkg/config"
+	"log"
+
+	"github.com/Merimaku/last-watchman/pkg/watchman"
 )
 
 func main() {
-	fmt.Println("Running")
-
+	log.Println("Running")
+	serverConfig, err := config.ReadConfigFromFile("conf-dev.toml")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	server := watchman.Watchman{
+		Config: serverConfig,
+	}
+	server.Serve()
 }

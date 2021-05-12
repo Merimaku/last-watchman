@@ -1,9 +1,12 @@
 package config
 
 import (
-
 	"github.com/BurntSushi/toml"
 )
+
+type Service struct {
+	TimeOut duration `toml:"timeout"`
+}
 
 type LastFM struct {
 	APIKey				string 	`toml:"api_key"`
@@ -11,7 +14,8 @@ type LastFM struct {
 }
 
 type Watchman struct {
-	LastFM	*LastFM	`toml:"lastfm"`
+	LastFM	*LastFM	 `toml:"lastfm"`
+	Service *Service `toml:"service"`
 }
 
 func ReadConfigFromFile(filePath string) (*Watchman, error) {
