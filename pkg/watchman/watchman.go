@@ -6,13 +6,28 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	// "net/http"
+	"errors"
 
 	"github.com/Merimaku/last-watchman/pkg/config"
 )
 
 type Watchman struct {
 	Config 	*config.Watchman
+	Modules *Modules
+}
+
+func AppBuilder(config *config.Watchman) (*Watchman, error) {
+	if config == nil {
+		return nil, errors.New("Config is not set")
+	}
+	modules, err := initialiseModules(config)
+	if err != nil {
+		return nil, err
+	}
+	return &Watchman{
+		Config: config,
+		Modules: &modules,
+	}, nil
 }
 
 func (w *Watchman) Serve() {
@@ -30,23 +45,29 @@ func (w *Watchman) Serve() {
 			}
 			<-signalChan
 			log.Println("Hard Exit")
-			os.Exit(2)
+			os.Exit(1)
 	}()
-	if err := run(ctx, watchTicker); err != nil {
+	if err := runForever(ctx, watchTicker); err != nil {
 		log.Fatalln(err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, ticker *time.Ticker) error {
+func runOnce() error {
+	return nil
+}
+
+func runForever(ctx context.Context, ticker *time.Ticker) error {
 	for {
 		select {
 		case <-ctx.Done():
 			time.Sleep(5 * time.Second)
 			log.Println("Terminating")
 			return nil
-		case t := <-(*ticker).C:
-			log.Println("Tick at", t)
+		case <-(*ticker).C:
+			if err := runOnce(); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	}
 }

@@ -13,8 +13,9 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	server := watchman.Watchman{
-		Config: serverConfig,
+	watchman, err := watchman.AppBuilder(serverConfig)
+	if err != nil {
+		log.Fatalln(err)
 	}
-	server.Serve()
+	watchman.Serve()
 }
