@@ -1,5 +1,6 @@
 [service]
 timeout = ""
+update_interval = ""
 
 [lastfm]
 api_key = ""

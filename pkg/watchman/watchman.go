@@ -1,6 +1,7 @@
 package watchman
 
 import (
+	"syscall"
 	"context"
 	"time"
 	"log"
@@ -16,6 +17,7 @@ type Watchman struct {
 	Modules *Modules
 }
 
+// Return the Watchman object that contains the config and initialise all necessary services
 func AppBuilder(config *config.Watchman) (*Watchman, error) {
 	if config == nil {
 		return nil, errors.New("Config is not set")
@@ -30,11 +32,12 @@ func AppBuilder(config *config.Watchman) (*Watchman, error) {
 	}, nil
 }
 
-func (w *Watchman) Serve() {
+// Start the Watchman app main service loop
+func (w *Watchman) Serve() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-	watchTicker := time.NewTicker(1 * time.Second)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	watchTicker := time.NewTicker(w.Config.Service.UpdateInterval.Duration)
 
 	go func() {
 			select {
@@ -47,17 +50,23 @@ func (w *Watchman) Serve() {
 			log.Println("Hard Exit")
 			os.Exit(1)
 	}()
-	if err := runForever(ctx, watchTicker); err != nil {
-		log.Fatalln(err)
-		os.Exit(1)
+	if err := w.runForever(ctx, watchTicker); err != nil {
+		return err
 	}
-}
-
-func runOnce() error {
 	return nil
 }
 
-func runForever(ctx context.Context, ticker *time.Ticker) error {
+// runOnce starts every services in the Modules object
+func (w *Watchman) runOnce() error {
+	err := w.Modules.watcherService.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// runForever wrap runOnce around a context switch loop
+func (w *Watchman) runForever(ctx context.Context, ticker *time.Ticker) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -65,8 +74,8 @@ func runForever(ctx context.Context, ticker *time.Ticker) error {
 			log.Println("Terminating")
 			return nil
 		case <-(*ticker).C:
-			if err := runOnce(); err != nil {
-				log.Fatalln(err)
+			if err := w.runOnce(); err != nil {
+				return err
 			}
 		}
 	}

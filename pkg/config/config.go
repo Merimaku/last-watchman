@@ -5,7 +5,8 @@ import (
 )
 
 type Service struct {
-	TimeOut duration `toml:"timeout"`
+	TimeOut duration 				`toml:"timeout"`
+	UpdateInterval duration `toml:"update_interval"`
 }
 
 type LastFM struct {
